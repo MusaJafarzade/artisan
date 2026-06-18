@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #E8E2DA; margin: 0; padding: 20px; color: #1a1a1a; padding-bottom: 140px; }
+    .header { text-align: center; padding: 30px 0; }
+    .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.25em; margin: 0; }
+    .header p { color: #5a544c; font-size: 11px; margin-top: 8px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .category-label { font-size: 12px; font-weight: 600; color: #5a544c; margin: 25px 0 10px 0; text-transform: uppercase; letter-spacing: 0.05em; }
+    .menu-block { background: #fff; border-radius: 20px; padding: 15px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
+    .item-img { width: 120px; height: 100px; border-radius: 12px; object-fit: cover; }
+    .item-info { flex-grow: 1; padding: 0 15px; }
+    .item-name { font-size: 16px; font-weight: 500; display: block; }
+    .item-desc { font-size: 12px; color: #5a544c; margin-top: 4px; display: block; }
+    .item-price { font-size: 15px; margin-top: 8px; display: block; }
+    .counter { display: flex; align-items: center; gap: 15px; background: #e0e0e0; padding: 5px 10px; border-radius: 25px; }
+    .btn { border: none; background: none; cursor: pointer; font-size: 18px; color: #333; }
+    .checkout-bar { position: fixed; bottom: 20px; left: 20px; right: 20px; background: #fff; padding: 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .btn-checkout { background: #1a1a1a; color: white; padding: 12px 25px; border-radius: 15px; border: none; font-weight: 500; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 9999; }
+    .modal-content { background: white; padding: 30px; border-radius: 24px; width: 85%; max-width: 320px; text-align: center; }
+    .modal input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>ARTISAN & CO</h1>
+    <p>MINIMALIST COFFEE CULTURE</p>
+  </div>
+  <div id="menu-container"></div>
+  <div class="checkout-bar">
+    <div><b>Total:</b> <span id="total">0.00 AZN</span></div>
+    <button class="btn-checkout" onclick="openOrderModal()">Checkout</button>
+  </div>
+  <div id="orderModal" class="modal">
+    <div class="modal-content">
+      <h3>YOUR ORDER</h3>
+      <div id="cartSummary" style="text-align: left; margin-bottom: 20px;"></div>
+      <div style="font-weight:bold; margin-bottom:20px;">Total: <span id="modalTotal">0.00 AZN</span></div>
+      <input type="text" id="userName" placeholder="Your Name">
+      <input type="tel" id="userPhone" placeholder="Phone Number">
+      <button class="btn-checkout" style="width: 100%;" onclick="processConfirm()">CONFIRM</button>
+      <p onclick="closeModal()" style="font-size: 12px; color: #aaa; margin-top: 15px; cursor: pointer;">Cancel</p>
+    </div>
+  </div>
+  <script>
+    const menuItems = [
+      {id: 1, cat: 'Espresso Bar', name: 'Espresso', desc: 'Clean and bright double shot', price: 4.00, qty: 0, img: 'https://i.ibb.co/ztzQcXP/k0ta8ki954k0l5qrh3rt4214nfa40rep.jpg'},
+      {id: 2, cat: 'Espresso Bar', name: 'Flat White', desc: 'Velvety micro-foam', price: 5.50, qty: 0, img: 'https://i.ibb.co/TMgx7NBw/flet-uajt-sho-ce-i-yak-gotuvati-1.jpg'},
+      {id: 3, cat: 'Desserts', name: 'Almond Croissant', desc: 'Freshly baked', price: 4.50, qty: 0, img: 'https://i.ibb.co/p6TkLyfY/download-2.png'}
+    ];
+    function render() {
+      let html = '';
+      let lastCat = '';
+      menuItems.forEach(item => {
+        if (item.cat !== lastCat) {
+          html += `<div class="category-label">${item.cat.toUpperCase()}</div>`;
+          lastCat = item.cat;
+        }
+        html += `<div class="menu-block">
+          <img src="${item.img}" class="item-img">
+          <div class="item-info">
+            <span class="item-name">${item.name}</span>
+            <span class="item-desc">${item.desc}</span>
+            <span class="item-price">${item.price.toFixed(2)} AZN</span>
+          </div>
+          <div class="counter">
+            <button class="btn" onclick="update(${item.id}, -1)">-</button>
+            <span>${item.qty}</span>
+            <button class="btn" onclick="update(${item.id}, 1)">+</button>
+          </div>
+        </div>`;
+      });
+      document.getElementById('menu-container').innerHTML = html;
+      document.getElementById('total').innerText = menuItems.reduce((s, i) => s + (i.price * i.qty), 0).toFixed(2) + ' AZN';
+    }
+    function update(id, change) {
+      let item = menuItems.find(i => i.id === id);
+      item.qty = Math.max(0, item.qty + change);
+      render();
+    }
+    function openOrderModal() {
+      const cart = menuItems.filter(i => i.qty > 0);
+      if (cart.length === 0) return alert("Your cart is empty!");
+      const summaryHtml = cart.map(i => `<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;"><img src="${i.img}" style="width:40px; height:40px; border-radius:8px;"><span>${i.name} x ${i.qty}</span></div>`).join('');
+      document.getElementById('cartSummary').innerHTML = summaryHtml;
+      document.getElementById('modalTotal').innerText = document.getElementById('total').innerText;
+      document.getElementById('orderModal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
+    function processConfirm() {
+  const name = document.getElementById('userName').value;
+  const phone = document.getElementById('userPhone').value;
+  
+  if (!name || !phone) {
+    alert("Please enter your name and phone!");
+    return;
+  }
+
+  // Собираем данные
+  const cartItems = menuItems.filter(i => i.qty > 0).map(i => i.name + " (" + i.qty + ")").join(", ");
+  const total = document.getElementById('modalTotal').innerText;
+
+  // Показываем, что идет отправка
+  const btn = event.target;
+  btn.innerText = "SENDING...";
+  btn.disabled = true;
+
+  google.script.run
+    .withSuccessHandler(function(msg) {
+      alert("ORDER ACCEPTED!"); // Твое сообщение
+      closeModal();
+      // Сброс всего
+      menuItems.forEach(i => i.qty = 0);
+      document.getElementById('userName').value = "";
+      document.getElementById('userPhone').value = "";
+      btn.innerText = "CONFIRM";
+      btn.disabled = false;
+      render();
+    })
+    .withFailureHandler(function(err) {
+      alert("Error: " + err);
+      btn.innerText = "CONFIRM";
+      btn.disabled = false;
+    })
+    .processOrder({name: name, phone: phone, cartItems: cartItems, total: total});
+}
+    render();
+  </script>
+</body>
+</html>
