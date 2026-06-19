@@ -11,7 +11,7 @@ function doPost(e) {
   output.addHeader("Access-Control-Allow-Origin", "*");
   output.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   output.addHeader("Access-Control-Allow-Headers", "Content-Type");
-
+0
   return output;
 }
 
