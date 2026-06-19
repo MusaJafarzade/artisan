@@ -134,10 +134,26 @@ function processConfirm(e) {
         })
         .processOrder(orderData);
     } else {
-      // Для теста в браузере
-      alert("В браузере отправка пока не настроена. Заказ: " + orderData.cartItems);
-      btn.innerText = "CONFIRM";
-      btn.disabled = false;
+      // Отправка через Fetch для обычного браузера
+      fetch('https://script.google.com/macros/s/AKfycby0vcXXN_1_XPDWj52kdNIbax7vpz8QQ05eJHVcVwk5u_jth76EkCuHaLvJ0bGCSvILTw/exec', {
+        method: 'POST',
+        mode: 'no-cors', // Важно: используем no-cors
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      })
+      .then(() => {
+        alert("ORDER ACCEPTED!");
+        closeModal();
+        menuItems.forEach(i => i.qty = 0);
+        render();
+        btn.innerText = "CONFIRM";
+        btn.disabled = false;
+      })
+      .catch((err) => {
+        alert("Error: " + err);
+        btn.innerText = "CONFIRM";
+        btn.disabled = false;
+      });
     }
   } // <--- ВОТ ЭТА СКОБКА ДОЛЖНА ЗАКРЫВАТЬ ФУНКЦИЮ
   // ЗАПУСК:
