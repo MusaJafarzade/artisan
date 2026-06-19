@@ -41,7 +41,7 @@
       <div style="font-weight:bold; margin-bottom:20px;">Total: <span id="modalTotal">0.00 AZN</span></div>
       <input type="text" id="userName" placeholder="Your Name">
       <input type="tel" id="userPhone" placeholder="Phone Number">
-      <button class="btn-checkout" style="width: 100%;" onclick="processConfirm(this)">CONFIRM</button>
+      <button class="btn-checkout" style="width: 100%;" onclick="processConfirm(event)">CONFIRM</button>
       <p onclick="closeModal()" style="font-size: 12px; color: #aaa; margin-top: 15px; cursor: pointer;">Cancel</p>
     </div>
   </div>
@@ -95,16 +95,20 @@
   }
 
   function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
-
-  function processConfirm() {
+function processConfirm(e) {
+    const btn = e.target; 
     const name = document.getElementById('userName').value;
     const phone = document.getElementById('userPhone').value;
-    if (!name || !phone) return alert("Please enter your name and phone!");
 
-    const btn = event.target;
+    if (!name || !phone) {
+      alert("Please enter your name and phone!");
+      return;
+    }
+
     btn.innerText = "SENDING...";
     btn.disabled = true;
 
+    // Вот здесь собираем данные ВНУТРИ функции
     const orderData = { 
       name: name, 
       phone: phone, 
@@ -115,17 +119,27 @@
     // Если мы в Телеграме - используем google.script.run
     if (typeof google !== 'undefined' && google.script) {
       google.script.run
-        .withSuccessHandler(() => { alert("ORDER ACCEPTED!"); closeModal(); render(); btn.innerText = "CONFIRM"; btn.disabled = false; })
-        .withFailureHandler((err) => { alert("Error: " + err); btn.innerText = "CONFIRM"; btn.disabled = false; })
+        .withSuccessHandler(() => { 
+          alert("ORDER ACCEPTED!"); 
+          closeModal(); 
+          menuItems.forEach(i => i.qty = 0); // Сбрасываем корзину
+          render(); 
+          btn.innerText = "CONFIRM"; 
+          btn.disabled = false; 
+        })
+        .withFailureHandler((err) => { 
+          alert("Error: " + err); 
+          btn.innerText = "CONFIRM"; 
+          btn.disabled = false; 
+        })
         .processOrder(orderData);
     } else {
-      // Иначе просто показываем, что заказ "ушел" (для теста)
+      // Для теста в браузере
       alert("В браузере отправка пока не настроена. Заказ: " + orderData.cartItems);
       btn.innerText = "CONFIRM";
       btn.disabled = false;
     }
-  }
-
+  } // <--- ВОТ ЭТА СКОБКА ДОЛЖНА ЗАКРЫВАТЬ ФУНКЦИЮ
   // ЗАПУСК:
   window.onload = render;
 </script>
