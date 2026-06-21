@@ -1,0 +1,31 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+
+def run_bot():
+    # Настройки браузера
+    options = Options()
+    options.add_argument("--start-maximized")
+    # Отключаем признаки автоматизации
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+    
+    # Автоматическая установка и запуск драйвера
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    
+    try:
+        print("Открываю сайт VFS...")
+        driver.get("https://visa.vfsglobal.com/blr/ru/pol/login")
+        
+        # Ждем, пока ты визуально убедишься, что сайт открылся
+        time.sleep(20)
+        
+    except Exception as e:
+        print(f"Ошибка: {e}")
+    finally:
+        driver.quit()
+
+if __name__ == "__main__":
+    run_bot()
